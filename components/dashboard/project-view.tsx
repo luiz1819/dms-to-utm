@@ -59,15 +59,19 @@ function PolygonPreview({ points }: { points: { e: number; n: number }[] }) {
 }
 
 export function ProjectView({
+  initialProjectId,
   initialVertices,
   initialZone,
   initialDatum,
 }: {
+  initialProjectId: string
   initialVertices: Vertex[]
   initialZone: string | null
   initialDatum: string | null
 }) {
   const [vertices, setVertices] = useState(initialVertices)
+  const [isDownloadingKml, setIsDownloadingKml] = useState(false)
+  const [downloadError, setDownloadError] = useState<string | null>(null)
   const [zone, setZone] = useState(initialZone ?? "23S")
   const [datum, setDatum] = useState(initialDatum ?? "SIRGAS2000")
   const metrics = useMemo(() => computeMetrics(vertices), [vertices])
@@ -86,22 +90,45 @@ export function ProjectView({
           <TabsTrigger value="dados">Dados</TabsTrigger>
           <TabsTrigger value="mapa">Mapa</TabsTrigger>
         </TabsList>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {["XLSX", "DXF"].map((format) => (
-            <button
-              key={format}
-              type="button"
-              disabled
-              title="Em breve"
-              className="inline-flex items-center gap-2 rounded-full border border-zinc-800 px-4 py-2 text-sm text-zinc-400 disabled:opacity-60 disabled:cursor-not-allowed"
-            >
+            <button key={format} type="button" disabled title="Em breve" className="inline-flex items-center gap-2 rounded-full border border-zinc-800 px-4 py-2 text-sm text-zinc-400 disabled:cursor-not-allowed disabled:opacity-60">
               <Download className="h-4 w-4" aria-hidden="true" />
               {format} <span className="text-xs text-zinc-600">Em breve</span>
             </button>
           ))}
+          <button
+            type="button"
+            disabled={isDownloadingKml || vertices.length < 3 || !initialZone || !initialDatum || initialDatum.toUpperCase().includes("SAD69")}
+            title={initialDatum?.toUpperCase().includes("SAD69") ? "KML indisponível para SAD69 neste momento" : !initialZone || !initialDatum ? "Datum e fuso ainda não determinados" : "Baixar KML"}
+            onClick={async () => {
+              setIsDownloadingKml(true)
+              setDownloadError(null)
+              try {
+                const response = await fetch(`/api/projetos/${initialProjectId}/export/kml`)
+                if (!response.ok) throw new Error((await response.json()).error ?? "Não foi possível gerar o KML.")
+                const blob = await response.blob()
+                const url = URL.createObjectURL(blob)
+                const anchor = document.createElement("a")
+                anchor.href = url
+                anchor.download = `${initialProjectId}.kml`
+                anchor.click()
+                URL.revokeObjectURL(url)
+              } catch (error) {
+                setDownloadError(error instanceof Error ? error.message : "Não foi possível gerar o KML.")
+              } finally {
+                setIsDownloadingKml(false)
+              }
+            }}
+            className="inline-flex items-center gap-2 rounded-full border border-zinc-700 px-4 py-2 text-sm text-zinc-200 transition hover:border-zinc-500 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <Download className="h-4 w-4" aria-hidden="true" />
+            KML
+          </button>
         </div>
       </div>
 
+      {downloadError ? <p role="alert" className="text-sm text-red-400">{downloadError}</p> : null}
       <TabsContent value="dados" className="grid gap-6 lg:grid-cols-[1fr_260px]">
         <div className="rounded-2xl border border-zinc-800/50 overflow-hidden">
           {vertices.length === 0 ? (

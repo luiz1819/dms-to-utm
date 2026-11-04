@@ -22,7 +22,7 @@ export default async function ProjetoPage({ params }: { params: Promise<{ id: st
   const supabase = createServerClient()
   const { data: project } = await supabase
     .from("projects")
-    .select("id, name, status, utm_zone, datum, vertices, created_at")
+    .select("id, name, status, utm_zone, datum, hemisphere, vertices, area_m2, perimeter_m, created_at")
     .eq("id", id)
     .maybeSingle()
 
@@ -41,6 +41,7 @@ export default async function ProjetoPage({ params }: { params: Promise<{ id: st
         </p>
       </div>
       <ProjectView
+        initialProjectId={project.id}
         initialVertices={Array.isArray(project.vertices) ? (project.vertices as Vertex[]) : []}
         initialZone={project.utm_zone}
         initialDatum={project.datum}

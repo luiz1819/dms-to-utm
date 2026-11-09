@@ -9,7 +9,7 @@ export function useSupabase() {
 
   return useMemo(
     () =>
-      createClient(process.env.SUPABASE_URL_3!, process.env.SUPABASE_PUBLISHABLE_KEY_3!, {
+      createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!, {
         accessToken: async () => (await session?.getToken()) ?? null,
       }),
     [session],

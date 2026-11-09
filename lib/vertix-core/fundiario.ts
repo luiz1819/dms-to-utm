@@ -31,7 +31,6 @@ export interface Escolha {
 
 // ---------- texto ----------
 export function repararTexto(s: unknown): string {
-  if (typeof s === 'number') return String(s);
   if (typeof s !== 'string') return '';
   if (!/[ÃÂ]/.test(s)) return s;
   if ([...s].some(c => c.charCodeAt(0) > 255)) return s;
@@ -98,7 +97,7 @@ export function urlWfs(q: Consulta, max = 300): string {
   const p = new URLSearchParams({
     service: 'WFS', version: '2.0.0', request: 'GetFeature', typeNames: WFS_CAMADA,
     outputFormat: 'application/json', srsName: 'EPSG:4674', count: String(max),
-    propertyName: 'nome_do_lo,gleba,nome_do_im,setor,nome_setor,adequacao_,geom',
+    propertyName: 'nome_do_lo,gleba,nome_do_im,setor,nome_setor,adequacao_,the_geom',
     cql_filter: filtros.join(' AND '),
   });
   return `${WFS_URL}?${p}`;

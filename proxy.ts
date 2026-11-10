@@ -1,12 +1,6 @@
-import { NextResponse } from "next/server"
-import type { NextRequest } from "next/server"
+import { clerkMiddleware } from "@clerk/nextjs/server"
 
-// Rotas públicas não dependem do Clerk. A autenticação é validada no servidor
-// pelas páginas e actions protegidas, evitando que uma configuração ausente do
-// provedor derrube o deployment inteiro com MIDDLEWARE_INVOCATION_FAILED.
-export default function proxy(_request: NextRequest) {
-  return NextResponse.next()
-}
+export default clerkMiddleware()
 
 export const config = {
   matcher: [
